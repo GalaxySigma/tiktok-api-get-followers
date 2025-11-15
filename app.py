@@ -2,12 +2,11 @@ import requests
 import time
 import csv
 
-# Get your API key here: https://scraptik.com
+# REAL RapidAPI key (replace this with your key)
+scraptik_apikey = "YOUR_ACTUAL_RAPIDAPI_KEY_HERE"
 
-scraptik_apikey = "ENTER API KEY HERE"
-
-#Use Scraptik "Username to ID" under Services if you need to look it up
-user_id = "ENTER USER ID HERE"
+# TikTok secUid (NOT user_id)
+secUid = "MS4wLjABAAAAqB08cUbXaDWqbD6MCga2RbGTuhfO2EsHayBYx08NDrN7IE3jQuRDNNN6YwyfH6_6"
 
 fieldnames = [
     'unique_id',
@@ -24,52 +23,46 @@ fieldnames = [
     'twitter_name'
 ]
 
-with open(r'data.csv', 'w', encoding="utf-8") as f:
-    writer = csv.writer(f)
-    row = {}
-    for x in fieldnames:
-        row[x] = x
+# Write CSV header
+with open('data.csv', 'w', encoding="utf-8", newline='') as f:
     writer = csv.DictWriter(f, fieldnames=fieldnames)
-    writer.writerow(row)
-        
-def get_followers(user_id, max_time):
+    writer.writeheader()
+
+def get_followers(secUid, cursor=0):
     try:
-        url = "https://scraptik.p.rapidapi.com/list-followers"
-        
+        url = "https://scraptik.p.rapidapi.com/user/followers"
+
         querystring = {
-            "user_id": str(user_id),
-            "count": "100",
-            "max_time": str(max_time)
+            "secUid": secUid,
+            "cursor": str(cursor),
+            "count": "2000"
         }
 
         headers = {
-            'x-rapidapi-key': scraptik_apikey,
-            'x-rapidapi-host': "scraptik.p.rapidapi.com"
+            "x-rapidapi-key": scraptik_apikey,
+            "x-rapidapi-host": "scraptik.p.rapidapi.com"
         }
 
         r = requests.get(url, headers=headers, params=querystring).json()
 
-        for u in r["followers"]:
-            with open(r'data.csv', 'a', encoding="utf-8") as f:
-                writer = csv.writer(f)
-                row = {}
-                for x in fieldnames:
-                    if x in u and u[x]:
-                        row[x] = str(u[x])
-                        
-                        if x == "uid":
-                            row[x] = str(u[x]) + ''
+        data = r.get("data", {})
+        followers = data.get("followers", [])
+        has_more = data.get("hasMore", False)
+        next_cursor = data.get("cursor", 0)
 
-                writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        # Save followers
+        with open('data.csv', 'a', encoding="utf-8", newline='') as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            for u in followers:
+                row = {k: u.get(k, "") for k in fieldnames}
                 writer.writerow(row)
 
-        if r["has_more"]:
-            get_followers(user_id, r["min_time"])
+        # Pagination
+        if has_more:
+            get_followers(secUid, next_cursor)
 
     except Exception as e:
-        print("Error!")
-        print (repr(e)) 
-        # retry?
-        # get_followers(user_id, max_time)
-    
-get_followers(user_id, int(time.time()))
+        print("Error:", e)
+
+# Start download
+get_followers(secUid)
