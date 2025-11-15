@@ -3,7 +3,7 @@ import time
 import csv
 
 # REAL RapidAPI key (replace this with your key)
-scraptik_apikey = "YOUR_ACTUAL_RAPIDAPI_KEY_HERE"
+scraptik_apikey = "f01a509558mshfbf6bce6d82a50fp13ef9bjsn702ba6d9c194"
 
 # TikTok secUid (NOT user_id)
 secUid = "MS4wLjABAAAAqB08cUbXaDWqbD6MCga2RbGTuhfO2EsHayBYx08NDrN7IE3jQuRDNNN6YwyfH6_6"
